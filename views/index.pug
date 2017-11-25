@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  main
+    article
+      section
+        form#drop_zone
+          p ここにファイルをドロップ
+          p.or または
+          input#upload_file(name='upload_file', type='file', accept='image/jpeg,image/png')
+      section
+        canvas#canvas.left_image
+        canvas.right_image
