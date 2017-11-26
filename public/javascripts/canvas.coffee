@@ -12,7 +12,7 @@ $ ->
     # Formからファイルを取得
     file = @files[0]
     # (1) HTMLのCanvas要素の取得
-    canvas = $('#canvas')
+    canvas = $('#left_canvas')
     # (2) getContext()メソッドで描画機能を有効にする
     ctx = canvas[0].getContext('2d')
     # 描画イメージインスタンス化
@@ -55,7 +55,7 @@ $ ->
     if file.type != 'image/jpeg' || file.type != 'image/png'
       alert '拡張子jpg、png以外は対応していません'
       return
-    canvas = $('#canvas')
+    canvas = $('#left_canvas')
     ctx = canvas[0].getContext('2d')
     image = new Image
     fr = new FileReader
@@ -70,4 +70,22 @@ $ ->
       image.src = evt.target.result
       return
     fr.readAsDataURL file
+
+  #$('#left_canvas').on click: (e) ->
+    canvas = $('#left_canvas')
+    ctx = canvas[0].getContext('2d')
+    mouseX = parseInt(e.offsetX)
+    mouseY = parseInt(e.offsetY)
+    imagedata = ctx.getImageData(0, 0, @.width, @.height)
+    data = imagedata.data
+    i = (mouseY * @.width + mouseX) * 4
+    r = data[i]
+    g = data[i + 1]
+    b = data[i + 2]
+    a = data[i + 3]
+    convertHex(r: r, g: g, b: b)
+    return
+
+  convertHex = (rgb) ->
+    rgb.r.toString(16) + rgb.g.toString(16) + rgb.b.toString(16)
   return
