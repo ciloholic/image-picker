@@ -4,38 +4,32 @@ $ ->
     alert 'ブラウザが対応していません'
     return
 
+  # ファイル選択処理
   $('#upload_file').change ->
     # 選択ファイルの有無をチェック
     if !@files.length
       alert 'ファイルが選択されていません'
       return
-    # Formからファイルを取得
     file = @files[0]
-    # (1) HTMLのCanvas要素の取得
-    canvas = $('#left_canvas')
-    # (2) getContext()メソッドで描画機能を有効にする
-    ctx = canvas[0].getContext('2d')
-    # 描画イメージインスタンス化
+    leftCanvas = $('#left_canvas')
+    ctx = leftCanvas[0].getContext('2d')
     image = new Image
-    # File API FileReader Objectでローカルファイルにアクセス
     fr = new FileReader
-    # ファイル読み込み読み込み完了後に実行 [非同期処理]
-    fr.onload = (evt) ->
-      # 画像がロードされた後にcanvasに描画を行う [非同期処理]
+    # ファイル読み込み後に実行 [非同期]
+    fr.onload = (e) ->
+      # 画像ロード後に実行 [非同期]
       image.onload = ->
-        # (3) プレビュー(canvas)のサイズを指定
-        cnvsH = 400
-        cnvsW = image.naturalWidth * cnvsH / image.naturalHeight
-        # (4) canvasにサイズアトリビュートを設定する
-        canvas.attr 'width', cnvsW
-        canvas.attr 'height', cnvsH
-        # (5) 描画
-        ctx.drawImage image, 0, 0, cnvsW, cnvsH
+        canvasH = 400
+        canvasW = image.naturalWidth * canvasH / image.naturalHeight
+        leftCanvas.attr 'width', canvasW
+        leftCanvas.attr 'height', canvasH
+        # canvasへ描画
+        ctx.drawImage image, 0, 0, canvasW, canvasH
+        # 減色処理
+        reducedColor(256)
         return
-      # 読み込んだ画像をimageのソースに設定
-      image.src = evt.target.result
+      image.src = e.target.result
       return
-    # fileを読み込むデータはBase64エンコードされる
     fr.readAsDataURL file
     return
 
@@ -49,27 +43,52 @@ $ ->
     e.stopPropagation()
     return false
 
+  # ファイルドロップ処理
   $('#drop_zone').on 'drop', (e) ->
     e.preventDefault()
     file = e.originalEvent.dataTransfer.files[0]
-    if file.type != 'image/jpeg' || file.type != 'image/png'
+    if file.type != 'image/jpeg' && file.type != 'image/png'
       alert '拡張子jpg、png以外は対応していません'
       return
-    canvas = $('#left_canvas')
-    ctx = canvas[0].getContext('2d')
+    leftCanvas = $('#left_canvas')
+    ctx = leftCanvas[0].getContext('2d')
     image = new Image
     fr = new FileReader
-    fr.onload = (evt) ->
+    fr.onload = (e) ->
       image.onload = ->
-        cnvsH = 400
-        cnvsW = image.naturalWidth * cnvsH / image.naturalHeight
-        canvas.attr 'width', cnvsW
-        canvas.attr 'height', cnvsH
-        ctx.drawImage image, 0, 0, cnvsW, cnvsH
+        canvasH = 400
+        canvasW = image.naturalWidth * canvasH / image.naturalHeight
+        leftCanvas.attr 'width', canvasW
+        leftCanvas.attr 'height', canvasH
+        ctx.drawImage image, 0, 0, canvasW, canvasH
+        # 減色処理
+        reducedColor(256)
         return
-      image.src = evt.target.result
+      image.src = e.target.result
       return
     fr.readAsDataURL file
+    return
+
+  # 減色処理
+  reducedColor = (num) ->
+    leftCanvas = $('#left_canvas')
+    leftCtx = leftCanvas[0].getContext('2d')
+    # ImageDataの生成
+    canvasW = leftCanvas.prop 'width'
+    canvasH = leftCanvas.prop 'height'
+    imagedata = leftCtx.getImageData(0, 0, canvasW, canvasH)
+    # 画像のカラー情報を取得
+    colors = getColorInfo(imagedata)
+    # 減色処理
+    medianCut = new TMedianCut(imagedata, colors)
+    medianCut.run num, true
+    # canvasへ描画
+    rightCanvas = $('#right_canvas')
+    rightCanvas.attr 'width', canvasW
+    rightCanvas.attr 'height', canvasH
+    rightCtx = rightCanvas[0].getContext('2d')
+    rightCtx.putImageData imagedata, 0, 0
+    return
 
   #$('#left_canvas').on click: (e) ->
     canvas = $('#left_canvas')
