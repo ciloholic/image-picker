@@ -10,27 +10,26 @@ $ ->
     if !@files.length
       alert 'ファイルが選択されていません'
       return
-    file = @files[0]
-    leftCanvas = $('#left_canvas')
-    ctx = leftCanvas[0].getContext('2d')
+    canvas = $('#left_canvas')
+    ctx = canvas[0].getContext('2d')
     image = new Image
     fr = new FileReader
     # ファイル読み込み後に実行 [非同期]
     fr.onload = (e) ->
       # 画像ロード後に実行 [非同期]
       image.onload = ->
-        canvasH = 400
-        canvasW = image.naturalWidth * canvasH / image.naturalHeight
-        leftCanvas.attr 'width', canvasW
-        leftCanvas.attr 'height', canvasH
+        canvasW = 400
+        canvasH = Math.floor(canvasW * image.naturalHeight / image.naturalWidth)
+        canvas.attr 'width', canvasW
+        canvas.attr 'height', canvasH
         # canvasへ描画
         ctx.drawImage image, 0, 0, canvasW, canvasH
         # 減色処理
-        reducedColor(256)
+        reducedColor(16)
         return
       image.src = e.target.result
       return
-    fr.readAsDataURL file
+    fr.readAsDataURL @files[0]
     return
 
   $('#drop_zone').on 'dragenter', (e) ->
@@ -50,19 +49,22 @@ $ ->
     if file.type != 'image/jpeg' && file.type != 'image/png'
       alert '拡張子jpg、png以外は対応していません'
       return
-    leftCanvas = $('#left_canvas')
-    ctx = leftCanvas[0].getContext('2d')
+    canvas = $('#left_canvas')
+    ctx = canvas[0].getContext('2d')
     image = new Image
     fr = new FileReader
+    # ファイル読み込み後に実行 [非同期]
     fr.onload = (e) ->
+      # 画像ロード後に実行 [非同期]
       image.onload = ->
-        canvasH = 400
-        canvasW = image.naturalWidth * canvasH / image.naturalHeight
-        leftCanvas.attr 'width', canvasW
-        leftCanvas.attr 'height', canvasH
+        canvasW = 400
+        canvasH = Math.floor(canvasW * image.naturalHeight / image.naturalWidth)
+        canvas.attr 'width', canvasW
+        canvas.attr 'height', canvasH
+        # canvasへ描画
         ctx.drawImage image, 0, 0, canvasW, canvasH
         # 減色処理
-        reducedColor(256)
+        reducedColor(16)
         return
       image.src = e.target.result
       return
@@ -73,13 +75,13 @@ $ ->
   reducedColor = (num) ->
     leftCanvas = $('#left_canvas')
     leftCtx = leftCanvas[0].getContext('2d')
-    # ImageDataの生成
     canvasW = leftCanvas.prop 'width'
     canvasH = leftCanvas.prop 'height'
+    # ImageDataの生成
     imagedata = leftCtx.getImageData(0, 0, canvasW, canvasH)
     # 画像のカラー情報を取得
     colors = getColorInfo(imagedata)
-    # 減色処理
+    # 減色
     medianCut = new TMedianCut(imagedata, colors)
     medianCut.run num, true
     # canvasへ描画
@@ -90,21 +92,56 @@ $ ->
     rightCtx.putImageData imagedata, 0, 0
     return
 
-  #$('#left_canvas').on click: (e) ->
-    canvas = $('#left_canvas')
-    ctx = canvas[0].getContext('2d')
-    mouseX = parseInt(e.offsetX)
-    mouseY = parseInt(e.offsetY)
-    imagedata = ctx.getImageData(0, 0, @.width, @.height)
-    data = imagedata.data
-    i = (mouseY * @.width + mouseX) * 4
-    r = data[i]
-    g = data[i + 1]
-    b = data[i + 2]
-    a = data[i + 3]
-    convertHex(r: r, g: g, b: b)
+  # スポイト
+  $('#right_canvas').on click: (e) ->
+    canvas = $('#right_canvas')
+    rightCtx = canvas[0].getContext('2d')
+    rect = canvas[0].getBoundingClientRect()
+    mouseX = Math.round(e.clientX - rect.left)
+    mouseY = Math.round(e.clientY - rect.top - ((400 - canvas[0].height) / 2))
+    imagedata = rightCtx.getImageData(0, 0, canvas[0].width, canvas[0].height)
+    i = ((mouseY * canvas[0].width) + mouseX) * 4
+    rgb =
+      r: imagedata.data[i]
+      g: imagedata.data[i + 1]
+      b: imagedata.data[i + 2]
+    console.log convertHex(rgb) + ' => %ccolor', 'background-color: ' + convertHex(rgb)
     return
 
-  convertHex = (rgb) ->
-    rgb.r.toString(16) + rgb.g.toString(16) + rgb.b.toString(16)
+  # オートセレクト
+  $('#auto_select_btn').on click: (e) ->
+    canvas = $('#right_canvas')
+    rightCtx = canvas[0].getContext('2d')
+    imagedata = rightCtx.getImageData(0, 0, canvas[0].width, canvas[0].height)
+    hex = []
+    max = imagedata.data.length / 4
+    i = 0
+    while i < max
+      rgb =
+        r: imagedata.data[i]
+        g: imagedata.data[i + 1]
+        b: imagedata.data[i + 2]
+      hex.push(convertHex(rgb))
+      i += 4
+    hexOverlap = hex.filter((v, i, s) -> s.indexOf(v) == i)
+    sort = []
+    for key, value of hexOverlap
+      sort.push({color: value, cnt: hex.filter((v, i) -> v == value).length})
+    sort.sort (a, b) ->
+      if a.cnt < b.cnt
+        return 1
+      if a.cnt > b.cnt
+        return -1
+      return 0
+    for key, value of sort.slice(0, 10)
+      console.log value.color + ' => %ccolor', 'background-color: ' + value.color
+      console.log value.cnt
+    return
+
+  # RGB(255,255,255) -> HEX(#ffffff)
+  convertHex = (rgb) -> '#' + toHex(rgb.r) + toHex(rgb.g) + toHex(rgb.b)
+
+  # NUMBER(255) -> HEX(ff)
+  toHex = (v) -> ('0' + v.toString(16)).substr(-2)
+
   return
