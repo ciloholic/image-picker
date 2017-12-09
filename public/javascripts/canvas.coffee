@@ -26,6 +26,8 @@ $ ->
         ctx.drawImage image, 0, 0, canvasW, canvasH
         # 減色処理
         reducedColor(16)
+        # オートセレクト
+        autoSelect()
         return
       image.src = e.target.result
       return
@@ -65,6 +67,8 @@ $ ->
         ctx.drawImage image, 0, 0, canvasW, canvasH
         # 減色処理
         reducedColor(16)
+        # オートセレクト
+        autoSelect()
         return
       image.src = e.target.result
       return
@@ -109,7 +113,7 @@ $ ->
     return
 
   # オートセレクト
-  $('#auto_select_btn').on click: (e) ->
+  autoSelect = ->
     canvas = $('#right_canvas')
     rightCtx = canvas[0].getContext('2d')
     imagedata = rightCtx.getImageData(0, 0, canvas[0].width, canvas[0].height)
@@ -123,19 +127,37 @@ $ ->
         b: imagedata.data[i + 2]
       hex.push(convertHex(rgb))
       i += 4
+    # 色の重複を削除
     hexOverlap = hex.filter((v, i, s) -> s.indexOf(v) == i)
+    # 色の集計
     sort = []
     for key, value of hexOverlap
       sort.push({color: value, cnt: hex.filter((v, i) -> v == value).length})
+    # 色の並び替え
     sort.sort (a, b) ->
       if a.cnt < b.cnt
         return 1
       if a.cnt > b.cnt
         return -1
       return 0
-    for key, value of sort.slice(0, 10)
-      console.log value.color + ' => %ccolor', 'background-color: ' + value.color
-      console.log value.cnt
+    # チャート描画
+    canvas = $('#chart_canvas')
+    canvas.attr('width', 400);
+    canvas.attr('height', 400);
+    chart_color = sort.slice(0, 10).map((v) -> v.color)
+    chart_cnt = sort.slice(0, 10).map((v) -> v.cnt)
+    chart_canvas = new Chart(canvas,
+      type: 'polarArea'
+      data:
+        labels: chart_color
+        datasets: [{
+          data: chart_cnt
+          backgroundColor: chart_color
+          borderColor: chart_color
+          borderWidth: 1
+        }]
+      options: responsive: false
+    )
     return
 
   # RGB(255,255,255) -> HEX(#ffffff)

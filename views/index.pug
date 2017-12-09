@@ -10,6 +10,5 @@ block content
           input#upload_file(name='upload_file', type='file', accept='image/jpeg,image/png')
       section
         canvas#left_canvas.left_image
-        canvas#right_canvas.right_image
-      section
-        button#auto_select_btn(type='button') オートセレクト
+        canvas#right_canvas(style='display: none;')
+        canvas#chart_canvas.right_image
