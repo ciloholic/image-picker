@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="stylesheets/style.css">
+    <script type="text/javascript" src="//code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script type="text/javascript" src="javascripts/lib/mode.min.js"></script>
+    <script type="text/javascript" src="javascripts/canvas.js"></script>
+    <title>Image Picker</title>
+  </head>
+  <body>
+    <main>
+      <article>
+        <section>
+          <form id="drop_zone">
+            <p>ここにファイルをドロップ</p>
+            <p class="or">または</p>
+            <input id="upload_file" name="upload_file" type="file" accept="image/jpeg,image/png">
+          </form>
+        </section>
+        <section>
+          <canvas class="left_image" id="left_canvas"></canvas>
+          <canvas id="right_canvas" style="display: none;"></canvas>
+          <canvas class="right_image" id="chart_canvas"></canvas>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>
