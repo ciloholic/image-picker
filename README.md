@@ -1,6 +1,6 @@
 # image picker
 
-画像内の色の割合をグラフ化する。
+画像内の色の割合をグラフ化する。  
 拡張子はjpg/pngに対応。
 
 ![image picker](https://raw.githubusercontent.com/ciloholic/image_picker/image/image_picker.png)
