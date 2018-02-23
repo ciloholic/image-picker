@@ -66,7 +66,7 @@ $ ->
         # canvasへ描画
         ctx.drawImage image, 0, 0, canvasW, canvasH
         # 減色処理
-        reducedColor(16)
+        reducedColor 16
         # オートセレクト
         autoSelect()
         return
@@ -104,7 +104,7 @@ $ ->
     mouseX = Math.round(e.clientX - rect.left)
     mouseY = Math.round(e.clientY - rect.top - ((400 - canvas[0].height) / 2))
     imagedata = rightCtx.getImageData(0, 0, canvas[0].width, canvas[0].height)
-    i = ((mouseY * canvas[0].width) + mouseX) * 4
+    i = (mouseY * canvas[0].width + mouseX) * 4
     rgb =
       r: imagedata.data[i]
       g: imagedata.data[i + 1]
@@ -114,6 +114,7 @@ $ ->
 
   # オートセレクト
   autoSelect = ->
+    $('#left_canvas').css 'background-image', 'none'
     canvas = $('#right_canvas')
     rightCtx = canvas[0].getContext('2d')
     imagedata = rightCtx.getImageData(0, 0, canvas[0].width, canvas[0].height)
@@ -125,14 +126,14 @@ $ ->
         r: imagedata.data[i]
         g: imagedata.data[i + 1]
         b: imagedata.data[i + 2]
-      hex.push(convertHex(rgb))
+      hex.push convertHex(rgb)
       i += 4
     # 色の重複を削除
     hexOverlap = hex.filter((v, i, s) -> s.indexOf(v) == i)
     # 色の集計
     sort = []
     for key, value of hexOverlap
-      sort.push({color: value, cnt: hex.filter((v, i) -> v == value).length})
+      sort.push {color: value, cnt: hex.filter((v, i) -> v == value).length}
     # 色の並び替え
     sort.sort (a, b) ->
       if a.cnt < b.cnt
@@ -140,24 +141,26 @@ $ ->
       if a.cnt > b.cnt
         return -1
       return 0
-    # チャート描画
+    # chart描画
     canvas = $('#chart_canvas')
-    canvas.attr('width', 400);
-    canvas.attr('height', 400);
+    canvas.attr 'width', 400
+    canvas.attr 'height', 400
     chart_color = sort.slice(0, 10).map((v) -> v.color)
     chart_cnt = sort.slice(0, 10).map((v) -> v.cnt)
-    chart_canvas = new Chart(canvas,
+    # 再描画時、chart初期化
+    if @chart
+      @chart.destroy()
+    @chart = new Chart(canvas,
       type: 'polarArea'
       data:
         labels: chart_color
-        datasets: [{
+        datasets: [ {
           data: chart_cnt
           backgroundColor: chart_color
           borderColor: chart_color
           borderWidth: 1
-        }]
-      options: responsive: false
-    )
+        } ]
+      options: responsive: false)
     return
 
   # RGB(255,255,255) -> HEX(#ffffff)

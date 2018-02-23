@@ -7,7 +7,7 @@
 body
   font-size: 15px
   line-height: 1.6
-  font-family: "Mplus 1p"
+  font-family: 'Mplus 1p'
   color: #444
   min-width: 1060px
 
@@ -31,10 +31,15 @@ main
         width: 400px
         height: 400px
         &.left_image
-          background-image: url("../images/no_image.png")
+          background-color: #cbcbcb
+          background-image: url('../images/no_image.png')
           background-size: contain
+          border-radius: 5px
         &.right_image
           background-color: #fff
+          border-radius: 5px
+          border: dashed 2px #bbb
+          padding: 5px
 
 #drop_zone
   width: 100%
